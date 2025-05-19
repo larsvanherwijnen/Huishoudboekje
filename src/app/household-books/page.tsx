@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@/app/hooks/useUser";
-import { AddHouseholdBook } from "@/app/components/AddHouseholdBook";
+import { AddHouseholdBook } from "@/app/components/AddHouseHoldBook";
 import { HouseholdBooksList } from "@/app/components/HouseholdBooksList";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
