@@ -16,10 +16,14 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/household-books"); 
-    } catch (err: any) {
+      router.push("/household-books");
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred.");
+      }
     }
   };
 
