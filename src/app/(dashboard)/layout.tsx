@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react";
 import Link from "next/link";
-import { Home, Book, Archive, List, User, LogOut } from "lucide-react";
+import { Home, Book, List, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/app/hooks/useUser";
 import { Button } from "@/components/ui/button";
@@ -24,17 +24,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <MenuLink href="/household-books" icon={<Book className="w-4 h-4" />}>
             Boekjes
           </MenuLink>
-          <MenuLink href="/household-books/archived" icon={<Archive className="w-4 h-4" />}>
-            Gearchiveerd
-          </MenuLink>
           <MenuLink href="/transactions" icon={<List className="w-4 h-4" />}>
             Transacties
           </MenuLink>
           <MenuLink href="/categories" icon={<List className="w-4 h-4" />}>
             Categorieën
-          </MenuLink>
-          <MenuLink href="/users" icon={<User className="w-4 h-4" />}>
-            Gebruikers
           </MenuLink>
         </nav>
         <div className="mt-auto px-4 py-4 border-t flex flex-col gap-2">
