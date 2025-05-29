@@ -22,7 +22,6 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/");
     } catch (err: unknown) {
-      console.error(err);
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -67,7 +66,7 @@ export default function LoginPage() {
             </Button>
           </form>
           <p className="mt-4 text-center text-sm">
-            Don't have an account?{" "}
+           {" Don't have an account? "}
             <a href="/register" className="text-blue-600 underline">
               Register here
             </a>

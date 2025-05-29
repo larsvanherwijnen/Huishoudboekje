@@ -50,7 +50,7 @@ export default function EditHouseholdBookPage() {
       });
       toast("Huishoudboekje is bijgewerkt.");
       router.push("/household-books");
-    } catch (err) {
+    } catch {
       setError("Fout bij opslaan.");
     }
   }
