@@ -20,7 +20,7 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/");
+      router.push("/household-books");
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

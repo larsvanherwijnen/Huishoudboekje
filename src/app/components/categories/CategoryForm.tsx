@@ -1,8 +1,15 @@
 import { useState } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Category } from "@/app/types/category";
+
+const categorySchema = z.object({
+  name: z.string().min(1, "Naam is verplicht"),
+  maxBudget: z.union([z.string(), z.number()]).optional(),
+  endDate: z.string().optional(),
+});
 
 export function CategoryForm({
   initial,
@@ -14,11 +21,22 @@ export function CategoryForm({
   const [name, setName] = useState(initial?.name ?? "");
   const [maxBudget, setMaxBudget] = useState(initial?.maxBudget ?? "");
   const [endDate, setEndDate] = useState(initial?.endDate ?? "");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   return (
     <form
       onSubmit={e => {
         e.preventDefault();
+        setErrors({});
+        const result = categorySchema.safeParse({ name, maxBudget, endDate });
+        if (!result.success) {
+          const fieldErrors: Record<string, string> = {};
+          result.error.errors.forEach(err => {
+            if (err.path[0]) fieldErrors[err.path[0]] = err.message;
+          });
+          setErrors(fieldErrors);
+          return;
+        }
         const data: Omit<Category, "id"> = {
           ...initial,
           name,
@@ -31,7 +49,8 @@ export function CategoryForm({
     >
       <div>
         <Label>Naam *</Label>
-        <Input value={name} onChange={e => setName(e.target.value)} required />
+        <Input value={name} onChange={e => setName(e.target.value)} />
+        {errors.name && <p className="text-red-500">{errors.name}</p>}
       </div>
       <div>
         <Label>Maximaal budget</Label>
@@ -41,6 +60,7 @@ export function CategoryForm({
           onChange={e => setMaxBudget(e.target.value)}
           min={0}
         />
+        {errors.maxBudget && <p className="text-red-500">{errors.maxBudget}</p>}
       </div>
       <div>
         <Label>Einddatum</Label>
@@ -49,6 +69,7 @@ export function CategoryForm({
           value={endDate ? endDate.slice(0, 10) : ""}
           onChange={e => setEndDate(e.target.value)}
         />
+        {errors.endDate && <p className="text-red-500">{errors.endDate}</p>}
       </div>
       <Button type="submit">Opslaan</Button>
     </form>

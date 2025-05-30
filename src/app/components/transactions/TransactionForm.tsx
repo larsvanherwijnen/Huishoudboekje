@@ -6,6 +6,15 @@ import { getCategories } from "@/app/lib/categories.services";
 import { useSelectedHouseholdBook } from "@/app/context/SelectedHouseholdBookContext";
 import type { Transaction } from "@/app/lib/transactions.service";
 import type { Category } from "@/app/types/category";
+import { z } from "zod";
+
+const transactionSchema = z.object({
+  type: z.enum(["income", "expense"]),
+  amount: z.string().min(1, "Bedrag is verplicht"),
+  date: z.string().min(1, "Datum is verplicht"),
+  categoryId: z.string().optional(),
+  description: z.string().min(1, "Omschrijving is verplicht"),
+});
 
 export function TransactionForm({
   initial,
@@ -25,7 +34,7 @@ export function TransactionForm({
   );
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (selectedBookId) {
@@ -35,16 +44,27 @@ export function TransactionForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    if (!amount) {
-      setError("Bedrag is verplicht.");
+    setErrors({});
+    const result = transactionSchema.safeParse({
+      type,
+      amount,
+      date,
+      categoryId,
+      description,
+    });
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach(err => {
+        if (err.path[0]) fieldErrors[err.path[0]] = err.message;
+      });
+      setErrors(fieldErrors);
       return;
     }
     if (!selectedBookId) {
-      setError("Geen huishoudboekje geselecteerd.");
+      setErrors({ householdBookId: "Geen huishoudboekje geselecteerd." });
       return;
     }
-    const transactionData: any = {
+    const transactionData: Transaction = {
       ...initial,
       householdBookId: selectedBookId,
       type,
@@ -69,6 +89,7 @@ export function TransactionForm({
           <option value="expense">Uitgave</option>
           <option value="income">Inkomst</option>
         </select>
+        {errors.type && <p className="text-red-500">{errors.type}</p>}
       </div>
       <div>
         <Label>Bedrag</Label>
@@ -77,8 +98,8 @@ export function TransactionForm({
           step="0.01"
           value={amount}
           onChange={e => setAmount(e.target.value)}
-          required
         />
+        {errors.amount && <p className="text-red-500">{errors.amount}</p>}
       </div>
       <div>
         <Label>Datum</Label>
@@ -86,8 +107,8 @@ export function TransactionForm({
           type="date"
           value={date}
           onChange={e => setDate(e.target.value)}
-          required
         />
+        {errors.date && <p className="text-red-500">{errors.date}</p>}
       </div>
       <div>
         <Label>Categorie</Label>
@@ -101,6 +122,7 @@ export function TransactionForm({
             <option key={cat.id} value={cat.id}>{cat.name}</option>
           ))}
         </select>
+        {errors.categoryId && <p className="text-red-500">{errors.categoryId}</p>}
       </div>
       <div>
         <Label>Omschrijving</Label>
@@ -109,8 +131,9 @@ export function TransactionForm({
           onChange={e => setDescription(e.target.value)}
           placeholder="Omschrijving"
         />
+        {errors.description && <p className="text-red-500">{errors.description}</p>}
       </div>
-      {error && <p className="text-red-500">{error}</p>}
+      {errors.householdBookId && <p className="text-red-500">{errors.householdBookId}</p>}
       <Button type="submit" disabled={loading}>Opslaan</Button>
     </form>
   );

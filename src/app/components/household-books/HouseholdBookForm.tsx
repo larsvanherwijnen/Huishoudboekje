@@ -2,6 +2,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { z } from "zod";
+
+const bookSchema = z.object({
+  name: z.string().min(1, "Naam is verplicht"),
+  description: z.string().min(1, "Omschrijving is verplicht"),
+});
 
 export function HouseholdBookForm({
   initial,
@@ -14,13 +20,18 @@ export function HouseholdBookForm({
 }) {
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    if (!name.trim()) {
-      setError("Naam is verplicht.");
+    setErrors({});
+    const result = bookSchema.safeParse({ name, description });
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach(err => {
+        if (err.path[0]) fieldErrors[err.path[0]] = err.message;
+      });
+      setErrors(fieldErrors);
       return;
     }
     onSubmit({ name, description });
@@ -34,8 +45,8 @@ export function HouseholdBookForm({
           id="name"
           value={name}
           onChange={e => setName(e.target.value)}
-          required
         />
+        {errors.name && <p className="text-red-500">{errors.name}</p>}
       </div>
       <div>
         <Label htmlFor="description" className="mb-2 block">Omschrijving</Label>
@@ -44,8 +55,8 @@ export function HouseholdBookForm({
           value={description}
           onChange={e => setDescription(e.target.value)}
         />
+        {errors.description && <p className="text-red-500">{errors.description}</p>}
       </div>
-      {error && <p className="text-red-500">{error}</p>}
       <Button type="submit" disabled={loading}>Opslaan</Button>
     </form>
   );

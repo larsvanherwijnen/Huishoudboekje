@@ -12,9 +12,11 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-function CustomTooltip({ active, payload, label }: any) {
+import type { TooltipProps } from "recharts";
+
+function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
   if (active && payload && payload.length) {
-    const spent = payload.find((p: any) => p.dataKey === "spent")?.value ?? 0;
+    const spent = payload.find((p: TooltipProps<number, string>["payload"][number]) => p.dataKey === "spent")?.value ?? 0;
     const budget = payload[0]?.payload?.budget ?? undefined;
     return (
       <div className="bg-white border rounded shadow p-2 text-xs">

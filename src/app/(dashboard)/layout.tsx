@@ -36,9 +36,6 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
           Huishoudboekjes
         </div>
         <nav className="flex-1 px-4 py-6 space-y-2">
-          <MenuLink href="/" icon={<Home className="w-4 h-4" />}>
-            Dashboard
-          </MenuLink>
           <MenuLink href="/household-books" icon={<Book className="w-4 h-4" />}>
             Boekjes
           </MenuLink>
