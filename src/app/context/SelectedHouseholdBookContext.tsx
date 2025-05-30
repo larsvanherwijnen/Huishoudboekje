@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { listenHouseholdBooks, HouseholdBook } from "@/app/lib/householdbooks.service";
+import { listenHouseholdBooks } from "@/app/lib/householdbooks.service";
 import { useUser } from "@/app/hooks/useUser";
+import type { HouseholdBook } from "@/app/types/householdbook";
 
 const STORAGE_KEY = "selectedHouseholdBookId";
 

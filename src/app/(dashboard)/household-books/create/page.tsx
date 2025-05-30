@@ -17,7 +17,7 @@ export default function CreateHouseholdBookPage() {
     setLoading(true);
     await addHouseholdBook({
       ...data,
-      userId: user.uid,
+      ownerId: user.uid,
     });
     setLoading(false);
     router.push("/household-books");

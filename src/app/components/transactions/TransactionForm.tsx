@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getCategories } from "@/app/lib/categories.services";
+import { listenCategories } from "@/app/lib/categories.services";
 import { useSelectedHouseholdBook } from "@/app/context/SelectedHouseholdBookContext";
-import type { Transaction } from "@/app/lib/transactions.service";
+import { useUser } from "@/app/hooks/useUser";
 import type { Category } from "@/app/types/category";
-import { z } from "zod";
+import type { Transaction } from "@/app/types/transaction";
 
 const transactionSchema = z.object({
   type: z.enum(["income", "expense"]),
@@ -27,63 +28,68 @@ export function TransactionForm({
 }) {
   const [selectedBookId] = useSelectedHouseholdBook();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [type, setType] = useState<"income" | "expense">(initial?.type ?? "expense");
+  const [type, setType] = useState<"income" | "expense">(
+    initial?.type ?? "expense"
+  );
   const [amount, setAmount] = useState(initial?.amount?.toString() ?? "");
   const [date, setDate] = useState(
-    initial?.date ? initial.date.slice(0, 10) : new Date().toISOString().slice(0, 10)
+    initial?.date
+      ? initial.date.slice(0, 10)
+      : new Date().toISOString().slice(0, 10)
   );
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { user } = useUser();
 
   useEffect(() => {
-    if (selectedBookId) {
-      getCategories(selectedBookId).then(setCategories);
-    }
+    if (!selectedBookId) return;
+    const unsubscribe = listenCategories(selectedBookId, setCategories);
+    return () => unsubscribe();
   }, [selectedBookId]);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setErrors({});
-    const result = transactionSchema.safeParse({
-      type,
-      amount,
-      date,
-      categoryId,
-      description,
-    });
-    if (!result.success) {
-      const fieldErrors: Record<string, string> = {};
-      result.error.errors.forEach(err => {
-        if (err.path[0]) fieldErrors[err.path[0]] = err.message;
-      });
-      setErrors(fieldErrors);
-      return;
-    }
-    if (!selectedBookId) {
-      setErrors({ householdBookId: "Geen huishoudboekje geselecteerd." });
-      return;
-    }
-    const transactionData: Transaction = {
-      ...initial,
-      householdBookId: selectedBookId,
-      type,
-      amount: parseFloat(amount),
-      date: new Date(date).toISOString(),
-      description: description || undefined,
-    };
-    if (categoryId) transactionData.categoryId = categoryId;
-
-    onSubmit(transactionData);
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        setErrors({});
+        const result = transactionSchema.safeParse({
+          type,
+          amount,
+          date,
+          categoryId,
+          description,
+        });
+        if (!result.success) {
+          const fieldErrors: Record<string, string> = {};
+          result.error.errors.forEach((err) => {
+            if (err.path[0]) fieldErrors[err.path[0]] = err.message;
+          });
+          setErrors(fieldErrors);
+          return;
+        }
+        if (!selectedBookId) {
+          setErrors({ householdBookId: "Geen huishoudboekje geselecteerd." });
+          return;
+        }
+        const data: Omit<Transaction, "id"> = {
+          householdBookId: selectedBookId,
+          type,
+          amount: parseFloat(amount),
+          date: new Date(date).toISOString(),
+          description: description || undefined,
+          ownerId: initial?.ownerId ?? user?.uid ?? "", // fallback to user id or empty string
+          ...(categoryId ? { categoryId } : {}),
+        };
+        onSubmit(data);
+      }}
+      className="space-y-4"
+    >
       <div>
-        <Label>Type</Label>
+        <Label>Type *</Label>
         <select
           value={type}
-          onChange={e => setType(e.target.value as "income" | "expense")}
+          onChange={(e) => setType(e.target.value as "income" | "expense")}
           className="w-full border rounded px-2 py-1"
         >
           <option value="expense">Uitgave</option>
@@ -92,21 +98,21 @@ export function TransactionForm({
         {errors.type && <p className="text-red-500">{errors.type}</p>}
       </div>
       <div>
-        <Label>Bedrag</Label>
+        <Label>Bedrag *</Label>
         <Input
           type="number"
           step="0.01"
           value={amount}
-          onChange={e => setAmount(e.target.value)}
+          onChange={(e) => setAmount(e.target.value)}
         />
         {errors.amount && <p className="text-red-500">{errors.amount}</p>}
       </div>
       <div>
-        <Label>Datum</Label>
+        <Label>Datum *</Label>
         <Input
           type="date"
           value={date}
-          onChange={e => setDate(e.target.value)}
+          onChange={(e) => setDate(e.target.value)}
         />
         {errors.date && <p className="text-red-500">{errors.date}</p>}
       </div>
@@ -114,27 +120,37 @@ export function TransactionForm({
         <Label>Categorie</Label>
         <select
           value={categoryId}
-          onChange={e => setCategoryId(e.target.value)}
+          onChange={(e) => setCategoryId(e.target.value)}
           className="w-full border rounded px-2 py-1"
         >
           <option value="">Geen</option>
-          {categories.map(cat => (
-            <option key={cat.id} value={cat.id}>{cat.name}</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
           ))}
         </select>
-        {errors.categoryId && <p className="text-red-500">{errors.categoryId}</p>}
+        {errors.categoryId && (
+          <p className="text-red-500">{errors.categoryId}</p>
+        )}
       </div>
       <div>
-        <Label>Omschrijving</Label>
+        <Label>Omschrijving *</Label>
         <Input
           value={description}
-          onChange={e => setDescription(e.target.value)}
+          onChange={(e) => setDescription(e.target.value)}
           placeholder="Omschrijving"
         />
-        {errors.description && <p className="text-red-500">{errors.description}</p>}
+        {errors.description && (
+          <p className="text-red-500">{errors.description}</p>
+        )}
       </div>
-      {errors.householdBookId && <p className="text-red-500">{errors.householdBookId}</p>}
-      <Button type="submit" disabled={loading}>Opslaan</Button>
+      {errors.householdBookId && (
+        <p className="text-red-500">{errors.householdBookId}</p>
+      )}
+      <Button type="submit" disabled={loading}>
+        Opslaan
+      </Button>
     </form>
   );
 }

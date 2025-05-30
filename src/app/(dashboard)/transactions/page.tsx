@@ -7,10 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Transaction } from "@/app/types/transaction";
 import { TransactionStatsBar } from "@/app/components/transactions/TransactionStatsBar";
 import {
-  getTransactions,
+  listenTransactions,
   deleteTransaction,
 } from "@/app/lib/transactions.service";
-import { getCategories } from "@/app/lib/categories.services";
+import { listenCategories } from "@/app/lib/categories.services";
 import { format, parseISO } from "date-fns";
 import { useSelectedHouseholdBook } from "@/app/context/SelectedHouseholdBookContext";
 import SaldoChart from "@/app/components/transactions/MonthlyBalanceChart";
@@ -39,23 +39,24 @@ export default function TransactionsPage() {
     }
   }, [user, loading, router]);
 
+  // Listen for transactions (realtime)
   useEffect(() => {
     if (!user || !selectedBookId) return;
-    // Fetch transactions for this month and selected book
-    getTransactions(user.uid, selectedMonth, selectedBookId).then(
-      setTransactions
-    );
-    getCategories(selectedBookId).then(setCategories);
-    // Debug log
-    console.log(
-      "Fetching transactions for user:",
+    const unsubscribe = listenTransactions(
       user.uid,
-      "month:",
+      setTransactions,
       selectedMonth,
-      "householdBookId:",
       selectedBookId
     );
+    return () => unsubscribe();
   }, [user, selectedBookId, selectedMonth]);
+
+  // Listen for categories (realtime)
+  useEffect(() => {
+    if (!selectedBookId) return;
+    const unsubscribe = listenCategories(selectedBookId, setCategories);
+    return () => unsubscribe();
+  }, [selectedBookId, selectedMonth]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -74,7 +75,6 @@ export default function TransactionsPage() {
 
   // Lijngrafiek: som per dag
   const saldoChartData = useMemo(() => {
-    // Verzamel alle dagen van deze maand waarop transacties zijn
     const daysSet = new Set<string>();
     transactions.forEach((t) => {
       daysSet.add(format(parseISO(t.date), "dd-MM"));
@@ -85,7 +85,6 @@ export default function TransactionsPage() {
       return ma !== mb ? ma - mb : da - db;
     });
 
-    // Bouw cumulatief saldo op en som per dag
     let saldo = 0;
     const saldoData: {
       date: string;

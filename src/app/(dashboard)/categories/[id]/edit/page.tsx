@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryForm } from "@/app/components/categories/CategoryForm";
-import { getCategories, updateCategory } from "@/app/lib/categories.services";
+import { listenCategories, updateCategory } from "@/app/lib/categories.services";
 import { useSelectedHouseholdBook } from "@/app/context/SelectedHouseholdBookContext";
 import type { Category } from "@/app/types/category";
 
@@ -17,11 +17,12 @@ export default function EditCategoryPage() {
 
   useEffect(() => {
     if (!selectedBookId || !id) return;
-    getCategories(selectedBookId).then(cats => {
-      const found = cats.find(c => c.id === id);
+    const unsubscribe = listenCategories(selectedBookId, (cats) => {
+      const found = cats.find((c) => c.id === id);
       if (found) setCategory(found);
       else router.replace("/categories");
     });
+    return () => unsubscribe();
   }, [selectedBookId, id, router]);
 
   async function handleEdit(data: Omit<Category, "id">) {

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getCategories, deleteCategory } from "@/app/lib/categories.services";
+import { listenCategories, deleteCategory } from "@/app/lib/categories.services";
 import { useSelectedHouseholdBook } from "@/app/context/SelectedHouseholdBookContext";
 import type { Category } from "@/app/types/category";
 import { CategoriesTable } from "@/app/components/categories/CategoriesTable";
@@ -16,13 +16,13 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     if (!selectedBookId) return;
-    getCategories(selectedBookId).then(setCategories);
+    const unsubscribe = listenCategories(selectedBookId, setCategories);
+    return () => unsubscribe();
   }, [selectedBookId]);
 
   async function handleDelete(id: string) {
     if (confirm("Weet je zeker dat je deze categorie wilt verwijderen?")) {
       await deleteCategory(id);
-      getCategories(selectedBookId).then(setCategories);
     }
   }
 

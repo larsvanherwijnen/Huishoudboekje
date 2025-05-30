@@ -14,28 +14,42 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import type { TooltipProps } from "recharts";
 
-function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
+interface CategoryBarData {
+  spent: number;
+  budget?: number;
+  name: string;
+  budgetRest: number;
+}
+
+interface CustomPayload {
+  dataKey: string;
+  name: string;
+  value: number;
+  payload: CategoryBarData;
+  color?: string;
+}
+
+
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>) {
   if (active && payload && payload.length) {
-    const spent = payload.find((p: TooltipProps<number, string>["payload"][number]) => p.dataKey === "spent")?.value ?? 0;
-    const budget = payload[0]?.payload?.budget ?? undefined;
+    const typedPayload = payload as CustomPayload[];
+
+    const spent = typedPayload.find((p) => p.dataKey === "spent")?.value ?? 0;
+    const budget = typedPayload[0]?.payload?.budget ?? undefined;
+
     return (
       <div className="bg-white border rounded shadow p-2 text-xs">
-        <div>
-          <strong>{label}</strong>
-        </div>
-        <div>
-          Uitgegeven: €{" "}
-          {spent.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
-        </div>
-        {budget !== undefined && (
-          <div>
-            Gebudgetteerd: €{" "}
-            {budget.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
-          </div>
-        )}
+        <p>{label}</p>
+        <p>Spent: {spent}</p>
+        {budget !== undefined && <p>Budget: {budget}</p>}
       </div>
     );
   }
+
   return null;
 }
 

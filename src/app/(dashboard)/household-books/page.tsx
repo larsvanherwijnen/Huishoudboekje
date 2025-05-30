@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useUser } from "@/app/hooks/useUser";
 import {
-  HouseholdBook,
   listenHouseholdBooks,
   archiveHouseholdBook,
   deArchiveHouseholdBook,
 } from "@/app/lib/householdbooks.service";
 import { toast } from "sonner";
 import { HouseHoldBooksTable } from "@/app/components/household-books/HouseHoldBooksTable";
+import type { HouseholdBook } from "@/app/types/householdbook";
 
 export default function HouseholdBooksPage() {
   const { user, loading } = useUser();

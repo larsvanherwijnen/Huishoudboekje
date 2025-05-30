@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TransactionForm } from "@/app/components/transactions/TransactionForm";
 import { getTransaction, updateTransaction } from "@/app/lib/transactions.service";
-import type { Transaction } from "@/app/lib/transactions.service";
+import type { Transaction } from "@/app/types/transaction";
 
 export default function EditTransactionPage() {
   const router = useRouter();
