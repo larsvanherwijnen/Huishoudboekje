@@ -18,7 +18,8 @@ export function HouseHoldBooksTable({
 }: {
   books: HouseholdBook[];
   onArchive?: (id: string) => void;
-  onDeArchive?: (id: string) => void;}) {
+  onDeArchive?: (id: string) => void;
+}) {
   const router = useRouter();
 
   return (
@@ -34,7 +35,10 @@ export function HouseHoldBooksTable({
       <TableBody>
         {books.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={3} className="text-center text-muted-foreground py-4">
+            <TableCell
+              colSpan={3}
+              className="text-center text-muted-foreground py-4"
+            >
               Geen huishoudboekjes gevonden.
             </TableCell>
           </TableRow>
@@ -44,12 +48,11 @@ export function HouseHoldBooksTable({
               <TableCell className="font-medium">{book.name}</TableCell>
               <TableCell>{book.description || "-"}</TableCell>
               <TableCell className="text-right space-x-2">
-              
                 {book.archived ? (
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={() => onDeArchive(book.id)}
+                    onClick={() => onDeArchive && onDeArchive(book.id)}
                   >
                     De-archiveer
                   </Button>
@@ -58,14 +61,16 @@ export function HouseHoldBooksTable({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => router.push(`/household-books/${book.id}/edit`)}
+                      onClick={() =>
+                        router.push(`/household-books/${book.id}/edit`)
+                      }
                     >
                       Bewerken
                     </Button>
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => onArchive(book.id)}
+                      onClick={() => onArchive && onArchive(book.id)}
                     >
                       Archiveren
                     </Button>
