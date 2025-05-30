@@ -8,7 +8,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format, parseISO } from "date-fns";
-import { useRouter } from "next/navigation";
 import type { Transaction } from "@/app/types/transaction";
 
 export function TransactionsTable({

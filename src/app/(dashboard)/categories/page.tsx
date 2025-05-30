@@ -4,15 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableCaption,
-} from "@/components/ui/table";
 import { getCategories, deleteCategory } from "@/app/lib/categories.services";
 import { useSelectedHouseholdBook } from "@/app/context/SelectedHouseholdBookContext";
 import type { Category } from "@/app/types/category";
