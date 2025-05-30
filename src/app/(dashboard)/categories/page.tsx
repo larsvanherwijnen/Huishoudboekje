@@ -91,8 +91,10 @@ export default function CategoriesPage() {
               ))}
             </TableBody>
           </Table>
+          
         </CardContent>
       </Card>
+     
     </div>
   );
 }

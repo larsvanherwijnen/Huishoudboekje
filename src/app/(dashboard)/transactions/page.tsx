@@ -5,6 +5,7 @@ import { useUser } from "@/app/hooks/useUser";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import type { Transaction } from "@/app/types/transaction";
 import {
   Table,
   TableBody,
@@ -15,20 +16,28 @@ import {
 } from "@/components/ui/table";
 import {
   getTransactions,
-  Transaction,
   deleteTransaction,
 } from "@/app/lib/transactions.service";
+import { getCategories } from "@/app/lib/categories.services";
 import { format, parseISO } from "date-fns";
-import { useSelectedHouseholdBook } from "@/app/context/SelectedHouseholdBookContext"; // <-- use context version!
+import { useSelectedHouseholdBook } from "@/app/context/SelectedHouseholdBookContext";
+import SaldoChart from "@/app/components/transactions/MonthlyBalanceChart";
+import CategoryBar from "@/app/components/transactions/CategoryBarchart";
 
 export default function TransactionsPage() {
   const { user, loading } = useUser();
   const router = useRouter();
   const [selectedBookId] = useSelectedHouseholdBook();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<
+    { id: string; name: string; maxBudget?: number }[]
+  >([]);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
   });
 
   useEffect(() => {
@@ -40,14 +49,25 @@ export default function TransactionsPage() {
   useEffect(() => {
     if (!user || !selectedBookId) return;
     // Fetch transactions for this month and selected book
-    getTransactions(user.uid, selectedMonth, selectedBookId).then(setTransactions);
+    getTransactions(user.uid, selectedMonth, selectedBookId).then(
+      setTransactions
+    );
+    getCategories(selectedBookId).then(setCategories);
     // Debug log
-    console.log("Fetching transactions for user:", user.uid, "month:", selectedMonth, "householdBookId:", selectedBookId);
+    console.log(
+      "Fetching transactions for user:",
+      user.uid,
+      "month:",
+      selectedMonth,
+      "householdBookId:",
+      selectedBookId
+    );
   }, [user, selectedBookId, selectedMonth]);
 
   // Calculate stats
   const stats = useMemo(() => {
-    let income = 0, expense = 0;
+    let income = 0,
+      expense = 0;
     transactions.forEach((t) => {
       if (t.type === "income") income += t.amount;
       else expense += t.amount;
@@ -59,11 +79,65 @@ export default function TransactionsPage() {
     };
   }, [transactions]);
 
+  // Lijngrafiek: som per dag
+  const saldoChartData = useMemo(() => {
+    // Verzamel alle dagen van deze maand waarop transacties zijn
+    const daysSet = new Set<string>();
+    transactions.forEach((t) => {
+      daysSet.add(format(parseISO(t.date), "dd-MM"));
+    });
+    const days = Array.from(daysSet).sort((a, b) => {
+      const [da, ma] = a.split("-").map(Number);
+      const [db, mb] = b.split("-").map(Number);
+      return ma !== mb ? ma - mb : da - db;
+    });
+
+    // Bouw cumulatief saldo op en som per dag
+    let saldo = 0;
+    const saldoData: {
+      date: string;
+      saldo: number;
+      income: number;
+      expense: number;
+    }[] = [];
+    days.forEach((day) => {
+      let income = 0;
+      let expense = 0;
+      transactions
+        .filter((t) => format(parseISO(t.date), "dd-MM") === day)
+        .forEach((t) => {
+          if (t.type === "income") {
+            income += t.amount;
+            saldo += t.amount;
+          } else {
+            expense += t.amount;
+            saldo -= t.amount;
+          }
+        });
+      saldoData.push({ date: day, saldo, income, expense });
+    });
+    return saldoData;
+  }, [transactions]);
+
+  // Staafdiagram: som per categorie
+ const categoryBarData = useMemo(() => {
+  return categories.map((cat) => {
+    const spent = transactions
+      .filter((t) => t.type === "expense" && t.categoryId === cat.id)
+      .reduce((sum, t) => sum + t.amount, 0);
+    return {
+      name: cat.name,
+      spent,
+      budget: cat.maxBudget,
+    };
+  });
+}, [transactions, categories]);
+
   if (loading) return <div className="p-8">Laden...</div>;
   if (!user) return null;
 
   return (
-    <div className="max-w-5xl mx-auto p-8">
+    <div className="p-8">
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Uitgaven & Inkomsten</CardTitle>
@@ -119,7 +193,7 @@ export default function TransactionsPage() {
           </div>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="mb-6">
         <CardHeader>
           <CardTitle>Transacties</CardTitle>
         </CardHeader>
@@ -157,7 +231,10 @@ export default function TransactionsPage() {
                     )}
                   </TableCell>
                   <TableCell>€ {t.amount.toFixed(2)}</TableCell>
-                  <TableCell>{t.categoryId || "-"}</TableCell>
+                  <TableCell>
+                    {" "}
+                    {categories.find((c) => c.id === t.categoryId)?.name || "-"}
+                  </TableCell>
                   <TableCell>{t.description || "-"}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button
@@ -192,6 +269,11 @@ export default function TransactionsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <div className="flex flex-col">
+        <SaldoChart data={saldoChartData} />
+        <CategoryBar data={categoryBarData} layout="horizontal" />{" "}
+      </div>
     </div>
   );
 }

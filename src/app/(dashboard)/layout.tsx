@@ -23,16 +23,13 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user) return;
-    // Als er nog geen geselecteerd boekje is (ook niet in localStorage), kies de eerste
     if (!selectedBookId && householdBooks.length > 0) {
       setSelectedBookId(householdBooks[0].id);
     }
-      console.log("selectedBookId changed:", selectedBookId);
-
   }, [user, setSelectedBookId, selectedBookId, householdBooks]);
 
   return (
-    <div className="flex min-h-screen bg-muted/40">
+    <div className="flex h-screen bg-muted/40">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r flex flex-col">
         <div className="h-16 flex items-center justify-center font-bold text-lg border-b">
@@ -68,9 +65,9 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
           </Button>
         </div>
       </aside>
-      <div className="flex-1 flex flex-col">
-        <header className="h-16 border-b flex items-center px-6 bg-background font-semibold text-lg">
-          {/* Boekje-selector */}
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <header className="h-16 flex-shrink-0 border-b flex items-center px-6 bg-background font-semibold text-lg">
           <div className="flex items-center gap-4">
             <span>Huidig boekje:</span>
             <select
@@ -89,7 +86,7 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
             </select>
           </div>
         </header>
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 min-h-0 p-6 overflow-auto">{children}</main>
       </div>
     </div>
   );
