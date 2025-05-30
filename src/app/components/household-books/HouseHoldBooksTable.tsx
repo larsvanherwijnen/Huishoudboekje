@@ -9,20 +9,16 @@ import {
   TableCaption,
 } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
-
-export type HouseHoldBook = {
-  id: string;
-  name: string;
-  description?: string;
-};
+import type { HouseholdBook } from "@/app/types/householdbook";
 
 export function HouseHoldBooksTable({
   books,
-  onDelete,
+  onArchive,
+  onDeArchive,
 }: {
-  books: HouseHoldBook[];
-  onDelete: (id: string) => void;
-}) {
+  books: HouseholdBook[];
+  onArchive?: (id: string) => void;
+  onDeArchive?: (id: string) => void;}) {
   const router = useRouter();
 
   return (
@@ -48,20 +44,33 @@ export function HouseHoldBooksTable({
               <TableCell className="font-medium">{book.name}</TableCell>
               <TableCell>{book.description || "-"}</TableCell>
               <TableCell className="text-right space-x-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => router.push(`/household-books/${book.id}/edit`)}
-                >
-                  Bewerken
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => onDelete(book.id)}
-                >
-                  Verwijderen
-                </Button>
+              
+                {book.archived ? (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => onDeArchive(book.id)}
+                  >
+                    De-archiveer
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => router.push(`/household-books/${book.id}/edit`)}
+                    >
+                      Bewerken
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => onArchive(book.id)}
+                    >
+                      Archiveren
+                    </Button>
+                  </>
+                )}
               </TableCell>
             </TableRow>
           ))

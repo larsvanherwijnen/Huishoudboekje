@@ -71,13 +71,13 @@ export default function HouseholdBooksPage() {
             <TabsContent value="active">
               <HouseHoldBooksTable
                 books={activeBooks}
-                onDelete={handleArchive}
+                onArchive={handleArchive}
               />
             </TabsContent>
             <TabsContent value="archived">
               <HouseHoldBooksTable
                 books={archivedBooks}
-                onDelete={handleDeArchive}
+                onDeArchive={handleDeArchive}
               />
             </TabsContent>
           </Tabs>
