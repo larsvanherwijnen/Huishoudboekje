@@ -58,15 +58,29 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
             <User className="w-5 h-5" />
             <span className="truncate">{user?.email ?? "Niet ingelogd"}</span>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full flex items-center gap-2"
-            onClick={() => logout()}
-          >
-            <LogOut className="w-4 h-4" />
-            Uitloggen
-          </Button>
+          {user ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full flex items-center gap-2"
+              onClick={() => logout()}
+            >
+              <LogOut className="w-4 h-4" />
+              Uitloggen
+            </Button>
+          ) : (
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="w-full flex items-center gap-2"
+            >
+              <Link href="/login">
+                <User className="w-4 h-4" />
+                Login
+              </Link>
+            </Button>
+          )}
         </div>
       </aside>
       {/* Main content area */}
