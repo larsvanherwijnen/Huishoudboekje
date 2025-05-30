@@ -2,11 +2,14 @@
 
 import { ReactNode, useEffect } from "react";
 import Link from "next/link";
-import { Home, Book, List, User, LogOut } from "lucide-react";
+import { Book, List, User, LogOut, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/app/hooks/useUser";
 import { Button } from "@/components/ui/button";
-import { SelectedHouseholdBookProvider, useSelectedHouseholdBook } from "@/app/context/SelectedHouseholdBookContext";
+import {
+  SelectedHouseholdBookProvider,
+  useSelectedHouseholdBook,
+} from "@/app/context/SelectedHouseholdBookContext";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
@@ -19,7 +22,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 // Splits je layout op zodat je de hook in DashboardLayoutContent gebruikt:
 function DashboardLayoutContent({ children }: { children: ReactNode }) {
   const { user, logout } = useUser();
-  const [selectedBookId, setSelectedBookId, householdBooks] = useSelectedHouseholdBook();
+  const [selectedBookId, setSelectedBookId, householdBooks] =
+    useSelectedHouseholdBook();
 
   useEffect(() => {
     if (!user) return;
@@ -36,13 +40,14 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
           Huishoudboekjes
         </div>
         <nav className="flex-1 px-4 py-6 space-y-2">
+
           <MenuLink href="/household-books" icon={<Book className="w-4 h-4" />}>
             Boekjes
           </MenuLink>
           <MenuLink href="/transactions" icon={<List className="w-4 h-4" />}>
             Transacties
           </MenuLink>
-          <MenuLink href="/categories" icon={<List className="w-4 h-4" />}>
+          <MenuLink href="/categories" icon={<Tag className="w-4 h-4" />}>
             Categorieën
           </MenuLink>
         </nav>
@@ -69,15 +74,17 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
             <span>Huidig boekje:</span>
             <select
               value={selectedBookId ?? ""}
-              onChange={e => setSelectedBookId(e.target.value)}
+              onChange={(e) => setSelectedBookId(e.target.value)}
               className="border rounded px-2 py-1"
               disabled={householdBooks.length === 0}
             >
               {householdBooks.length === 0 ? (
                 <option value="">Geen boekjes gevonden</option>
               ) : (
-                householdBooks.map(book => (
-                  <option key={book.id} value={book.id}>{book.name}</option>
+                householdBooks.map((book) => (
+                  <option key={book.id} value={book.id}>
+                    {book.name}
+                  </option>
                 ))
               )}
             </select>

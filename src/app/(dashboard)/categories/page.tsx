@@ -16,6 +16,7 @@ import {
 import { getCategories, deleteCategory } from "@/app/lib/categories.services";
 import { useSelectedHouseholdBook } from "@/app/context/SelectedHouseholdBookContext";
 import type { Category } from "@/app/types/category";
+import { CategoriesTable } from "@/app/components/categories/CategoriesTable";
 
 export default function CategoriesPage() {
   const router = useRouter();
@@ -44,57 +45,9 @@ export default function CategoriesPage() {
           </Button>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableCaption>Overzicht van je categorieën.</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Naam</TableHead>
-                <TableHead>Max. budget</TableHead>
-                <TableHead>Einddatum</TableHead>
-                <TableHead className="text-right">Acties</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {categories.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-4">
-                    Geen categorieën gevonden.
-                  </TableCell>
-                </TableRow>
-              )}
-              {categories.map((cat) => (
-                <TableRow key={cat.id}>
-                  <TableCell className="font-medium">{cat.name}</TableCell>
-                  <TableCell>
-                    {cat.maxBudget ? `€ ${cat.maxBudget}` : "-"}
-                  </TableCell>
-                  <TableCell>
-                    {cat.endDate ? new Date(cat.endDate).toLocaleDateString() : "-"}
-                  </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => router.push(`/categories/${cat.id}/edit`)}
-                    >
-                      Bewerken
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleDelete(cat.id)}
-                    >
-                      Verwijderen
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          
+          <CategoriesTable categories={categories} onDelete={handleDelete} />
         </CardContent>
       </Card>
-     
     </div>
   );
 }

@@ -76,7 +76,7 @@ export default function CategoryBar({
             <Tooltip content={<CustomTooltip />} />
             <Legend />
             <Bar dataKey="spent" stackId="a" name="Uitgegeven">
-              {stackedData.map((entry, idx) => {
+              {stackedData.map((entry) => {
                 let color = "#22c55e";
                 if (entry.budget) {
                   if (entry.spent > entry.budget) color = "#ef4444";

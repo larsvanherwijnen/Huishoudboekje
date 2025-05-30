@@ -4,16 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useUser } from "@/app/hooks/useUser";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import type { Transaction } from "@/app/types/transaction";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { TransactionStatsBar } from "@/app/components/transactions/TransactionStatsBar";
 import {
   getTransactions,
   deleteTransaction,
@@ -23,6 +15,7 @@ import { format, parseISO } from "date-fns";
 import { useSelectedHouseholdBook } from "@/app/context/SelectedHouseholdBookContext";
 import SaldoChart from "@/app/components/transactions/MonthlyBalanceChart";
 import CategoryBar from "@/app/components/transactions/CategoryBarchart";
+import { TransactionsTable } from "@/app/components/transactions/TransactionsTable";
 
 export default function TransactionsPage() {
   const { user, loading } = useUser();
@@ -120,18 +113,18 @@ export default function TransactionsPage() {
   }, [transactions]);
 
   // Staafdiagram: som per categorie
- const categoryBarData = useMemo(() => {
-  return categories.map((cat) => {
-    const spent = transactions
-      .filter((t) => t.type === "expense" && t.categoryId === cat.id)
-      .reduce((sum, t) => sum + t.amount, 0);
-    return {
-      name: cat.name,
-      spent,
-      budget: cat.maxBudget,
-    };
-  });
-}, [transactions, categories]);
+  const categoryBarData = useMemo(() => {
+    return categories.map((cat) => {
+      const spent = transactions
+        .filter((t) => t.type === "expense" && t.categoryId === cat.id)
+        .reduce((sum, t) => sum + t.amount, 0);
+      return {
+        name: cat.name,
+        spent,
+        budget: cat.maxBudget,
+      };
+    });
+  }, [transactions, categories]);
 
   if (loading) return <div className="p-8">Laden...</div>;
   if (!user) return null;
@@ -143,54 +136,12 @@ export default function TransactionsPage() {
           <CardTitle>Uitgaven & Inkomsten</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-            <div>
-              <div className="font-semibold">
-                Statistieken ({selectedMonth})
-              </div>
-              <div className="flex gap-8 mt-2">
-                <div>
-                  <span className="block text-muted-foreground text-xs">
-                    Inkomsten
-                  </span>
-                  <span className="font-bold text-green-700">
-                    € {stats.income.toFixed(2)}
-                  </span>
-                </div>
-                <div>
-                  <span className="block text-muted-foreground text-xs">
-                    Uitgaven
-                  </span>
-                  <span className="font-bold text-red-700">
-                    € {stats.expense.toFixed(2)}
-                  </span>
-                </div>
-                <div>
-                  <span className="block text-muted-foreground text-xs">
-                    Balans
-                  </span>
-                  <span className="font-bold">
-                    € {stats.balance.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs mb-1" htmlFor="month">
-                Maand
-              </label>
-              <input
-                id="month"
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="border rounded px-2 py-1"
-              />
-            </div>
-            <Button onClick={() => router.push("/transactions/create")}>
-              Nieuwe transactie
-            </Button>
-          </div>
+          <TransactionStatsBar
+            stats={stats}
+            selectedMonth={selectedMonth}
+            setSelectedMonth={setSelectedMonth}
+            onCreate={() => router.push("/transactions/create")}
+          />
         </CardContent>
       </Card>
       <Card className="mb-6">
@@ -198,75 +149,21 @@ export default function TransactionsPage() {
           <CardTitle>Transacties</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Datum</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Bedrag</TableHead>
-                <TableHead>Categorie</TableHead>
-                <TableHead>Omschrijving</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    Geen transacties gevonden voor deze maand.
-                  </TableCell>
-                </TableRow>
-              )}
-              {transactions.map((t) => (
-                <TableRow key={t.id}>
-                  <TableCell>
-                    {format(parseISO(t.date), "dd-MM-yyyy")}
-                  </TableCell>
-                  <TableCell>
-                    {t.type === "income" ? (
-                      <span className="text-green-700 font-medium">
-                        Inkomst
-                      </span>
-                    ) : (
-                      <span className="text-red-700 font-medium">Uitgave</span>
-                    )}
-                  </TableCell>
-                  <TableCell>€ {t.amount.toFixed(2)}</TableCell>
-                  <TableCell>
-                    {" "}
-                    {categories.find((c) => c.id === t.categoryId)?.name || "-"}
-                  </TableCell>
-                  <TableCell>{t.description || "-"}</TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => router.push(`/transactions/${t.id}/edit`)}
-                    >
-                      Bewerken
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={async () => {
-                        if (
-                          confirm(
-                            "Weet je zeker dat je deze transactie wilt verwijderen?"
-                          )
-                        ) {
-                          await deleteTransaction(t.id);
-                          setTransactions(
-                            transactions.filter((tx) => tx.id !== t.id)
-                          );
-                        }
-                      }}
-                    >
-                      Verwijderen
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <TransactionsTable
+            transactions={transactions}
+            categories={categories}
+            onEdit={(id) => router.push(`/transactions/${id}/edit`)}
+            onDelete={async (id) => {
+              if (
+                confirm(
+                  "Weet je zeker dat je deze transactie wilt verwijderen?"
+                )
+              ) {
+                await deleteTransaction(id);
+                setTransactions(transactions.filter((tx) => tx.id !== id));
+              }
+            }}
+          />
         </CardContent>
       </Card>
 
