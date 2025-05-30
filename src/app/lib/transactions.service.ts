@@ -1,32 +1,33 @@
 import { db } from "@/app/lib/firebase";
 import { collection, query, where, orderBy, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc } from "firebase/firestore";
 import { endOfMonth } from "date-fns";
-export type Transaction = {
-  id: string;
-  householdBookId: string;
-  userId: string;
-  type: "income" | "expense";
-  amount: number;
-  date: string;
-  categoryId?: string;
-  description?: string;
-};
+import type { Transaction } from "@/app/types/transaction";
 
-export async function getTransactions(userId: string, month?: string) {
+export async function getTransactions(
+  ownerId: string,
+  month?: string,
+  householdBookId?: string
+) {
+  const filters = [
+    where("ownerId", "==", ownerId),
+  ];
+
+  if (householdBookId) {
+    filters.push(where("householdBookId", "==", householdBookId));
+  }
+
   let q = query(
     collection(db, "transactions"),
-    where("userId", "==", userId),
+    ...filters,
     orderBy("date", "desc")
   );
 
   if (month) {
-    // month: "2024-05"
     const start = new Date(`${month}-01T00:00:00`);
-    console.log("Start date:", start);
     const end = endOfMonth(start);
     q = query(
       collection(db, "transactions"),
-      where("userId", "==", userId),
+      ...filters,
       where("date", ">=", start.toISOString()),
       where("date", "<=", end.toISOString()),
       orderBy("date", "desc")

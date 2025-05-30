@@ -3,56 +3,35 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  getHouseholdBook,
-  updateHouseholdBook,
-} from "@/app/lib/householdbooks.service";
-import { toast } from "sonner"
+import { HouseholdBookForm } from "@/app/components/household-books/HouseholdBookForm";
+import { getHouseholdBook, updateHouseholdBook } from "@/app/lib/householdbooks.service";
 
 export default function EditHouseholdBookPage() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [initial, setInitial] = useState<{ name?: string; description?: string }>({});
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     getHouseholdBook(id).then(book => {
       if (!book) {
-        setError("Boekje niet gevonden.");
-        setLoading(false);
+        router.replace("/household-books");
         return;
       }
-      setName(book.name || "");
-      setDescription(book.description || "");
+      setInitial({ name: book.name, description: book.description });
       setLoading(false);
     });
-  }, [id]);
+  }, [id, router]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (!name.trim()) {
-      setError("Naam is verplicht.");
-      return;
-    }
-    try {
-      await updateHouseholdBook(id, {
-        name,
-        description,
-      });
-      toast("Huishoudboekje is bijgewerkt.");
-      router.push("/household-books");
-    } catch {
-      setError("Fout bij opslaan.");
-    }
+  async function handleSubmit(data: { name: string; description?: string }) {
+    setSaving(true);
+    await updateHouseholdBook(id, data);
+    setSaving(false);
+    router.push("/household-books");
   }
 
   if (loading) return <div className="p-8">Laden...</div>;
@@ -64,27 +43,7 @@ export default function EditHouseholdBookPage() {
           <CardTitle>Huishoudboekje bewerken</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="name" className="mb-2 block">Naam</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="description" className="mb-2 block">Omschrijving</Label>
-              <Input
-                id="description"
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-              />
-            </div>
-            {error && <p className="text-red-500">{error}</p>}
-            <Button type="submit">Opslaan</Button>
-          </form>
+          <HouseholdBookForm initial={initial} onSubmit={handleSubmit} loading={saving} />
         </CardContent>
       </Card>
     </div>

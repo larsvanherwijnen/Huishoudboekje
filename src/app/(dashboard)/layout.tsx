@@ -1,14 +1,35 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import Link from "next/link";
 import { Home, Book, List, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/app/hooks/useUser";
 import { Button } from "@/components/ui/button";
+import { SelectedHouseholdBookProvider, useSelectedHouseholdBook } from "@/app/context/SelectedHouseholdBookContext";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
+  return (
+    <SelectedHouseholdBookProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </SelectedHouseholdBookProvider>
+  );
+}
+
+// Splits je layout op zodat je de hook in DashboardLayoutContent gebruikt:
+function DashboardLayoutContent({ children }: { children: ReactNode }) {
   const { user, logout } = useUser();
+  const [selectedBookId, setSelectedBookId, householdBooks] = useSelectedHouseholdBook();
+
+  useEffect(() => {
+    if (!user) return;
+    // Als er nog geen geselecteerd boekje is (ook niet in localStorage), kies de eerste
+    if (!selectedBookId && householdBooks.length > 0) {
+      setSelectedBookId(householdBooks[0].id);
+    }
+      console.log("selectedBookId changed:", selectedBookId);
+
+  }, [user, setSelectedBookId, selectedBookId, householdBooks]);
 
   return (
     <div className="flex min-h-screen bg-muted/40">
@@ -18,7 +39,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           Huishoudboekjes
         </div>
         <nav className="flex-1 px-4 py-6 space-y-2">
-          <MenuLink href="/dashboard" icon={<Home className="w-4 h-4" />}>
+          <MenuLink href="/" icon={<Home className="w-4 h-4" />}>
             Dashboard
           </MenuLink>
           <MenuLink href="/household-books" icon={<Book className="w-4 h-4" />}>
@@ -49,6 +70,24 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </aside>
       <div className="flex-1 flex flex-col">
         <header className="h-16 border-b flex items-center px-6 bg-background font-semibold text-lg">
+          {/* Boekje-selector */}
+          <div className="flex items-center gap-4">
+            <span>Huidig boekje:</span>
+            <select
+              value={selectedBookId ?? ""}
+              onChange={e => setSelectedBookId(e.target.value)}
+              className="border rounded px-2 py-1"
+              disabled={householdBooks.length === 0}
+            >
+              {householdBooks.length === 0 ? (
+                <option value="">Geen boekjes gevonden</option>
+              ) : (
+                householdBooks.map(book => (
+                  <option key={book.id} value={book.id}>{book.name}</option>
+                ))
+              )}
+            </select>
+          </div>
         </header>
         <main className="flex-1 p-6">{children}</main>
       </div>

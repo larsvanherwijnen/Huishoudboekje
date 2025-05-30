@@ -1,14 +1,6 @@
 import { db } from "@/app/lib/firebase";
 import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, Unsubscribe, getDoc } from "firebase/firestore";
-
-export type HouseholdBook = {
-  id: string;
-  name: string;
-  description?: string;
-  ownerId: string;
-  archived?: boolean;
-  participants?: string[];
-};
+import type { HouseholdBook } from "@/app/types/householdbook";
 
 export function listenHouseholdBooks(
   userId: string,

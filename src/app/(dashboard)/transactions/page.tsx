@@ -19,18 +19,16 @@ import {
   deleteTransaction,
 } from "@/app/lib/transactions.service";
 import { format, parseISO } from "date-fns";
+import { useSelectedHouseholdBook } from "@/app/context/SelectedHouseholdBookContext"; // <-- use context version!
 
 export default function TransactionsPage() {
   const { user, loading } = useUser();
   const router = useRouter();
-
+  const [selectedBookId] = useSelectedHouseholdBook();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}`;
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
 
   useEffect(() => {
@@ -40,15 +38,16 @@ export default function TransactionsPage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (!user) return;
-    // Haal transacties op voor deze maand
-    getTransactions(user.uid, selectedMonth).then(setTransactions);
-  }, [user, selectedMonth]);
+    if (!user || !selectedBookId) return;
+    // Fetch transactions for this month and selected book
+    getTransactions(user.uid, selectedMonth, selectedBookId).then(setTransactions);
+    // Debug log
+    console.log("Fetching transactions for user:", user.uid, "month:", selectedMonth, "householdBookId:", selectedBookId);
+  }, [user, selectedBookId, selectedMonth]);
 
-  // Statistieken berekenen
+  // Calculate stats
   const stats = useMemo(() => {
-    let income = 0,
-      expense = 0;
+    let income = 0, expense = 0;
     transactions.forEach((t) => {
       if (t.type === "income") income += t.amount;
       else expense += t.amount;
@@ -168,7 +167,6 @@ export default function TransactionsPage() {
                     >
                       Bewerken
                     </Button>
-
                     <Button
                       size="sm"
                       variant="destructive"

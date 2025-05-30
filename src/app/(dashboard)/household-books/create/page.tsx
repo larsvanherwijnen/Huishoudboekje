@@ -1,44 +1,26 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useUser } from "@/app/hooks/useUser";
+import { HouseholdBookForm } from "@/app/components/household-books/HouseholdBookForm";
 import { addHouseholdBook } from "@/app/lib/householdbooks.service";
-import { toast } from "sonner"
+import { useUser } from "@/app/hooks/useUser";
+import { useState } from "react";
 
 export default function CreateHouseholdBookPage() {
-  const { user } = useUser();
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useUser();
+  const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (!name.trim()) {
-      setError("Naam is verplicht.");
-      return;
-    }
-    if (!user?.uid) {
-      setError("Gebruiker niet gevonden.");
-      return;
-    }
-    try {
-      await addHouseholdBook({
-        name,
-        description,
-        ownerId: user.uid,
-      });
-      toast("Event has been created.");
-      router.push("/household-books");
-    } catch {
-      setError("Fout bij toevoegen.");
-    }
+  async function handleSubmit(data: { name: string; description?: string }) {
+    if (!user) return;
+    setLoading(true);
+    await addHouseholdBook({
+      ...data,
+      userId: user.uid,
+    });
+    setLoading(false);
+    router.push("/household-books");
   }
 
   return (
@@ -48,27 +30,7 @@ export default function CreateHouseholdBookPage() {
           <CardTitle>Nieuw huishoudboekje</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="name" className="mb-2 block">Naam</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="description" className="mb-2 block">Omschrijving</Label>
-              <Input
-                id="description"
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-              />
-            </div>
-            {error && <p className="text-red-500">{error}</p>}
-            <Button type="submit">Aanmaken</Button>
-          </form>
+          <HouseholdBookForm onSubmit={handleSubmit} loading={loading} />
         </CardContent>
       </Card>
     </div>
