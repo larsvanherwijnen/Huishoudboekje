@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect } from "react";
 import Link from "next/link";
-import { Book, List, User, LogOut, Tag } from "lucide-react";
+import { Book, List, User, LogOut, Tag, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/app/hooks/useUser";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,9 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
           Huishoudboekjes
         </div>
         <nav className="flex-1 px-4 py-6 space-y-2">
+          <MenuLink href="/" icon={<Home className="w-4 h-4" />}>
+            Dashboard
+          </MenuLink>
           <MenuLink href="/household-books" icon={<Book className="w-4 h-4" />}>
             Boekjes
           </MenuLink>
