@@ -98,8 +98,9 @@ export function TransactionForm({
         {errors.type && <p className="text-red-500">{errors.type}</p>}
       </div>
       <div>
-        <Label>Bedrag *</Label>
+        <Label htmlFor="amount">Bedrag *</Label>
         <Input
+          id="amount"
           type="number"
           step="0.01"
           value={amount}
@@ -108,8 +109,9 @@ export function TransactionForm({
         {errors.amount && <p className="text-red-500">{errors.amount}</p>}
       </div>
       <div>
-        <Label>Datum *</Label>
+        <Label htmlFor="date">Datum *</Label>
         <Input
+          id="date"
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
@@ -135,8 +137,9 @@ export function TransactionForm({
         )}
       </div>
       <div>
-        <Label>Omschrijving *</Label>
+        <Label htmlFor="description">Omschrijving *</Label>
         <Input
+          id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Omschrijving"

@@ -48,13 +48,19 @@ export function CategoryForm({
       className="space-y-4"
     >
       <div>
-        <Label>Naam *</Label>
-        <Input value={name} onChange={e => setName(e.target.value)} />
+        <Label htmlFor="name">Naam *</Label>
+        <Input
+          id="name"
+          value={name}
+          onChange={e => setName(e.target.value)}
+        />
         {errors.name && <p className="text-red-500">{errors.name}</p>}
       </div>
+
       <div>
-        <Label>Maximaal budget</Label>
+        <Label htmlFor="maxBudget">Maximaal budget</Label>
         <Input
+          id="maxBudget"
           type="number"
           value={maxBudget}
           onChange={e => setMaxBudget(e.target.value)}
@@ -62,15 +68,18 @@ export function CategoryForm({
         />
         {errors.maxBudget && <p className="text-red-500">{errors.maxBudget}</p>}
       </div>
+
       <div>
-        <Label>Einddatum</Label>
+        <Label htmlFor="endDate">Einddatum</Label>
         <Input
+          id="endDate"
           type="date"
           value={endDate ? endDate.slice(0, 10) : ""}
           onChange={e => setEndDate(e.target.value)}
         />
         {errors.endDate && <p className="text-red-500">{errors.endDate}</p>}
       </div>
+
       <Button type="submit">Opslaan</Button>
     </form>
   );
